@@ -1,0 +1,158 @@
+package com.google.example.gcmnetworkmanagerquickstart;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.wifi.WifiManager;
+import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
+
+import com.google.android.gms.gcm.GcmNetworkManager;
+import com.google.android.gms.gcm.OneoffTask;
+import com.google.android.gms.gcm.PeriodicTask;
+import com.google.android.gms.gcm.Task;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+    private static final String TAG = "MainActivity";
+
+    public static final String TASK_TAG_WIFI = "wifi_task";
+    public static final String TASK_TAG_CHARGING = "charging_task";
+    public static final String TASK_TAG_PERIODIC = "periodic_task";
+
+    private GcmNetworkManager mGcmNetworkManager;
+    private BroadcastReceiver mReceiver;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // [START get_gcm_network_manager]
+        mGcmNetworkManager = GcmNetworkManager.getInstance(this);
+        // [END get_gcm_network_manager]
+
+        // BroadcastReceiver to get information from MyTaskService about task completion.
+        mReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getAction().equals(MyTaskService.ACTION_DONE)) {
+                    String tag = intent.getStringExtra(MyTaskService.EXTRA_TAG);
+                    int result = intent.getIntExtra(MyTaskService.EXTRA_RESULT, -1);
+
+                    String msg = String.format("DONE: %s (%d)", tag, result);
+                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+
+        findViewById(R.id.button_start_wifi_task).setOnClickListener(this);
+        findViewById(R.id.button_start_charging_task).setOnClickListener(this);
+        findViewById(R.id.button_turn_on_wifi).setOnClickListener(this);
+        findViewById(R.id.button_start_periodic_task).setOnClickListener(this);
+        findViewById(R.id.button_stop_periodic_task).setOnClickListener(this);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(MyTaskService.ACTION_DONE);
+
+        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
+        manager.registerReceiver(mReceiver, filter);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
+        manager.unregisterReceiver(mReceiver);
+
+        // For the purposes of this sample, cancel all tasks when the app is stopped.
+        mGcmNetworkManager.cancelAllTasks(MyTaskService.class);
+    }
+
+    public void startChargingTask() {
+        Log.d(TAG, "startChargingTask");
+
+        OneoffTask task = new OneoffTask.Builder()
+                .setService(MyTaskService.class)
+                .setTag(TASK_TAG_CHARGING)
+                .setExecutionWindow(0L, 3600L)
+                .setRequiresCharging(true)
+                .build();
+
+        mGcmNetworkManager.schedule(task);
+    }
+
+    public void startWifiTask() {
+        Log.d(TAG, "startWiFiTask");
+
+        // Disable WiFi so the task does not start immediately
+        WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        wifi.setWifiEnabled(false);
+
+        // [START start_one_off_task]
+        OneoffTask task = new OneoffTask.Builder()
+                .setService(MyTaskService.class)
+                .setTag(TASK_TAG_WIFI)
+                .setExecutionWindow(0L, 3600L)
+                .setRequiredNetwork(Task.NETWORK_STATE_UNMETERED)
+                .build();
+
+        mGcmNetworkManager.schedule(task);
+        // [END start_one_off_task]
+    }
+
+    public void startPeriodicTask() {
+        Log.d(TAG, "startPeriodicTask");
+
+        // [START start_periodic_task]
+        PeriodicTask task = new PeriodicTask.Builder()
+                .setService(MyTaskService.class)
+                .setTag(TASK_TAG_PERIODIC)
+                .setPeriod(5L)
+                .build();
+
+        mGcmNetworkManager.schedule(task);
+        // [END start_periodic_task]
+    }
+
+    public void stopPeriodicTask() {
+        Log.d(TAG, "stopPeriodicTask");
+
+        // [START stop_periodic_task]
+        mGcmNetworkManager.cancelTask(TASK_TAG_PERIODIC, MyTaskService.class);
+        // [END stop_per
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.button_start_wifi_task:
+                startWifiTask();
+                break;
+            case R.id.button_start_charging_task:
+                startChargingTask();
+                break;
+            case R.id.button_turn_on_wifi:
+                WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+                wifi.setWifiEnabled(true);
+                break;
+            case R.id.button_start_periodic_task:
+                startPeriodicTask();
+                break;
+            case R.id.button_stop_periodic_task:
+                stopPeriodicTask();
+                break;
+        }
+    }
+}
