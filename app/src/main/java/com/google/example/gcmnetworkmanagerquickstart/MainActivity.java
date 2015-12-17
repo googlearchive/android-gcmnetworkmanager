@@ -27,6 +27,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.OneoffTask;
 import com.google.android.gms.gcm.PeriodicTask;
@@ -35,6 +37,7 @@ import com.google.android.gms.gcm.Task;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = "MainActivity";
+    private static final int RC_PLAY_SERVICES = 123;
 
     public static final String TASK_TAG_WIFI = "wifi_task";
     public static final String TASK_TAG_CHARGING = "charging_task";
@@ -71,6 +74,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.button_turn_on_wifi).setOnClickListener(this);
         findViewById(R.id.button_start_periodic_task).setOnClickListener(this);
         findViewById(R.id.button_stop_periodic_task).setOnClickListener(this);
+
+        // Check that Google Play Services is available, since we need it to use GcmNetworkManager
+        // but the API does not use GoogleApiClient, which would normally perform the check
+        // automatically.
+        checkPlayServicesAvailable();
     }
 
     @Override
@@ -147,6 +155,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // [START stop_periodic_task]
         mGcmNetworkManager.cancelTask(TASK_TAG_PERIODIC, MyTaskService.class);
         // [END stop_per
+    }
+
+    private void checkPlayServicesAvailable() {
+        GoogleApiAvailability availability = GoogleApiAvailability.getInstance();
+        int resultCode = availability.isGooglePlayServicesAvailable(this);
+
+        if (resultCode != ConnectionResult.SUCCESS) {
+            if (availability.isUserResolvableError(resultCode)) {
+                // Show dialog to resolve the error.
+                availability.getErrorDialog(this, resultCode, RC_PLAY_SERVICES).show();
+            } else {
+                // Unresolvable error
+                Toast.makeText(this, "Google Play Services error", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     @Override
