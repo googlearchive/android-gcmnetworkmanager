@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         PeriodicTask task = new PeriodicTask.Builder()
                 .setService(MyTaskService.class)
                 .setTag(TASK_TAG_PERIODIC)
-                .setPeriod(5L)
+                .setPeriod(30L)
                 .build();
 
         mGcmNetworkManager.schedule(task);
