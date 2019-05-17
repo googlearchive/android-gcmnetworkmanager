@@ -1,4 +1,13 @@
-# GcmNetworkManager Quickstart
+# GcmNetworkManager Quickstart [DEPRECATED]
+
+**Last year, we announced Android Jetpack [WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager/). WorkManager, the new job management system in Jetpack, incorporates the features of Firebase Job Dispatcher (FJD) and Android’s [JobScheduler](https://developer.android.com/reference/android/app/job/JobScheduler)
+to provide a consistent job scheduling service back to api level 14 while
+leveraging JobScheduler on newer devices. WorkManager works with or without
+Google Play Services. WorkManager was first released to alpha in May 2018 and then went thru extensive iteration and improvement based on developer feedback including 10 alphas; it moved to beta on Dec 19, 2018, and was released to [stable](https://developer.android.com/jetpack/androidx/releases/work#1.0.0) on Mar 5, 2019. One thing the team has been discussing at some length is whether it would be better for developers in the long run if we create one holistic solution via WorkManager; where we can pool all of our efforts and also give developers a single unified recommended path?**
+
+**After careful evaluation, the team has decided to focus all of our efforts on WorkManager and to deprecate GCMNetworkManager. We have modified our plans in direct response to developer feedback in order to make this as easy for you as possible. We know that managing background work is a critical part of your app and these changes impact you. We want to support you through this migration as much as we can by giving you as much advance notice as possible to make these changes. Firebase Job Dispatcher will be archived in github in about 1 year, on Apr 7, 2020. Apps should migrate to WorkManager or an alternative job management system before this date.**
+
+**We are continuing to invest in and add new features to WorkManager and welcome any feedback or feature [requests](https://issuetracker.google.com/issues/newcomponent=409906&template=1094197).**
 
 This sample demonstrates how to use the GcmNetworkManager API.
 
